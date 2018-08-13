@@ -20,7 +20,7 @@ namespace NzbDrone.Core.Music
     public interface IRefreshAlbumService
     {
         void RefreshAlbumInfo(Album album);
-        void RefreshAlbumInfo(List<Album> albums);
+        void RefreshAlbumInfo(List<Album> albums, bool forceAlbumRefresh);
     }
 
     public class RefreshAlbumService : IRefreshAlbumService, IExecute<RefreshAlbumCommand>
@@ -50,11 +50,11 @@ namespace NzbDrone.Core.Music
             _logger = logger;
         }
 
-        public void RefreshAlbumInfo(List<Album> albums)
+        public void RefreshAlbumInfo(List<Album> albums, bool forceAlbumRefresh)
         {
             foreach (var album in albums)
             {
-                if (_checkIfAlbumShouldBeRefreshed.ShouldRefresh(album))
+                if (forceAlbumRefresh || _checkIfAlbumShouldBeRefreshed.ShouldRefresh(album))
                 {
                     RefreshAlbumInfo(album);
                 }
@@ -92,6 +92,7 @@ namespace NzbDrone.Core.Music
             album.LastInfoSync = DateTime.UtcNow;
             album.CleanTitle = albumInfo.CleanTitle;
             album.Title = albumInfo.Title ?? "Unknown";
+            album.Disambiguation = albumInfo.Disambiguation;
             album.AlbumType = albumInfo.AlbumType;
             album.SecondaryTypes = albumInfo.SecondaryTypes;
             album.Genres = albumInfo.Genres;

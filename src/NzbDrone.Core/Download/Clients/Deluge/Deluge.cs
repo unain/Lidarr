@@ -45,6 +45,8 @@ namespace NzbDrone.Core.Download.Clients.Deluge
                 _proxy.SetLabel(actualHash, Settings.MusicCategory, Settings);
             }
 
+            _proxy.SetTorrentSeedingConfiguration(actualHash, remoteAlbum.SeedConfiguration, Settings);
+
             var isRecentAlbum = remoteAlbum.IsRecentAlbum();
 
             if (isRecentAlbum && Settings.RecentTvPriority == (int)DelugePriority.First ||
@@ -64,6 +66,8 @@ namespace NzbDrone.Core.Download.Clients.Deluge
             {
                 throw new DownloadClientException("Deluge failed to add torrent " + filename);
             }
+
+            _proxy.SetTorrentSeedingConfiguration(actualHash, remoteAlbum.SeedConfiguration, Settings);
 
             if (!Settings.MusicCategory.IsNullOrWhiteSpace())
             {
@@ -100,6 +104,8 @@ namespace NzbDrone.Core.Download.Clients.Deluge
 
             foreach (var torrent in torrents)
             {
+                if (torrent.Hash == null) continue;
+
                 var item = new DownloadClientItem();
                 item.DownloadId = torrent.Hash.ToUpper();
                 item.Title = torrent.Name;
@@ -110,6 +116,7 @@ namespace NzbDrone.Core.Download.Clients.Deluge
                 var outputPath = _remotePathMappingService.RemapRemoteToLocal(Settings.Host, new OsPath(torrent.DownloadPath));
                 item.OutputPath = outputPath + torrent.Name;
                 item.RemainingSize = torrent.Size - torrent.BytesDownloaded;
+                item.SeedRatio = torrent.Ratio;
                 try
                 {
                     item.RemainingTime = TimeSpan.FromSeconds(torrent.Eta);
@@ -144,8 +151,13 @@ namespace NzbDrone.Core.Download.Clients.Deluge
                     item.Status = DownloadItemStatus.Downloading;
                 }
 
-                // Here we detect if Deluge is managing the torrent and whether the seed criteria has been met. This allows drone to delete the torrent as appropriate.
-                item.CanMoveFiles = item.CanBeRemoved = (torrent.IsAutoManaged && torrent.StopAtRatio && torrent.Ratio >= torrent.StopRatio && torrent.State == DelugeTorrentStatus.Paused);
+                // Here we detect if Deluge is managing the torrent and whether the seed criteria has been met.
+                // This allows drone to delete the torrent as appropriate.
+                item.CanMoveFiles = item.CanBeRemoved =
+                    torrent.IsAutoManaged &&
+                    torrent.StopAtRatio &&
+                    torrent.Ratio >= torrent.StopRatio &&
+                    torrent.State == DelugeTorrentStatus.Paused;
 
                 items.Add(item);
             }
@@ -245,7 +257,7 @@ namespace NzbDrone.Core.Download.Clients.Deluge
 
             if (!enabledPlugins.Contains("Label"))
             {
-                return new NzbDroneValidationFailure("TvCategory", "Label plugin not activated")
+                return new NzbDroneValidationFailure("MusicCategory", "Label plugin not activated")
                 {
                     DetailedDescription = "You must have the Label plugin enabled in Deluge to use categories."
                 };
@@ -260,7 +272,7 @@ namespace NzbDrone.Core.Download.Clients.Deluge
 
                 if (!labels.Contains(Settings.MusicCategory))
                 {
-                    return new NzbDroneValidationFailure("TvCategory", "Configuration of label failed")
+                    return new NzbDroneValidationFailure("MusicCategory", "Configuration of label failed")
                     {
                         DetailedDescription = "Lidarr as unable to add the label to Deluge."
                     };

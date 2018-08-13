@@ -162,6 +162,7 @@ namespace NzbDrone.Core.Test.Download.DownloadClientTests.QBittorrentTests
         [TestCase("uploading")]
         [TestCase("stalledUP")]
         [TestCase("checkingUP")]
+        [TestCase("forcedUP")]
         public void completed_item_should_have_required_properties(string state)
         {
             var torrent = new QBittorrentTorrent
@@ -493,6 +494,14 @@ namespace NzbDrone.Core.Test.Download.DownloadClientTests.QBittorrentTests
 
             var item = Subject.GetItems().Single();
             item.Category.Should().Be(category);
+        }
+
+        [Test]
+        public void should_handle_eta_biginteger()
+        {
+            var json = "{ \"eta\": 18446744073709335000 }";
+            var torrent = Newtonsoft.Json.JsonConvert.DeserializeObject<QBittorrentTorrent>(json);
+            torrent.Eta.ToString().Should().Be("18446744073709335000");
         }
     }
 }

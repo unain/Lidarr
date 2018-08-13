@@ -1,5 +1,5 @@
 #! /bin/bash
-msBuild='/c/Program Files (x86)/MSBuild/14.0/Bin'
+msBuildVersion='15.0'
 outputFolder='./_output'
 outputFolderLinux='./_output_linux'
 outputFolderMacOS='./_output_macos'
@@ -19,6 +19,8 @@ artifactsFolderMacOS=$artifactsFolder/macos
 artifactsFolderMacOSApp=$artifactsFolder/macos-app
 
 nuget='tools/nuget/nuget.exe';
+vswhere='tools/vswhere/vswhere.exe';
+
 CheckExitCode()
 {
     "$@"
@@ -65,17 +67,16 @@ CleanFolder()
     find $path -depth -empty -type d -exec rm -r "{}" \;
 }
 
-AddJsonNet()
-{
-    rm $outputFolder/Newtonsoft.Json.*
-    cp $sourceFolder/packages/Newtonsoft.Json.*/lib/net35/*.dll $outputFolder
-    cp $sourceFolder/packages/Newtonsoft.Json.*/lib/net35/*.dll $updateFolder
-}
-
 BuildWithMSBuild()
 {
+    installationPath=`$vswhere -latest -products \* -requires Microsoft.Component.MSBuild -property installationPath`
+    installationPath=${installationPath/C:\\/\/c\/}
+    installationPath=${installationPath//\\/\/}
+    msBuild="$installationPath/MSBuild/$msBuildVersion/Bin"
+    echo $msBuild
+
     export PATH=$msBuild:$PATH
-    CheckExitCode MSBuild.exe $slnFile //t:Clean //m
+    CheckExitCode MSBuild.exe $slnFile //p:Configuration=Release //p:Platform=x86 //t:Clean //m
     $nuget restore $slnFile
     CheckExitCode MSBuild.exe $slnFile //p:Configuration=Release //p:Platform=x86 //t:Build //m //p:AllowedReferenceRelatedFileExtensions=.pdb
 }
@@ -83,9 +84,9 @@ BuildWithMSBuild()
 BuildWithXbuild()
 {
     export MONO_IOMAP=case
-    CheckExitCode xbuild /t:Clean $slnFile
+    CheckExitCode msbuild /t:Clean $slnFile
     mono $nuget restore $slnFile
-    CheckExitCode xbuild /p:Configuration=Release /p:Platform=x86 /t:Build /p:AllowedReferenceRelatedFileExtensions=.pdb $slnFile
+    CheckExitCode msbuild /p:Configuration=Release /p:Platform=x86 /t:Build /p:AllowedReferenceRelatedFileExtensions=.pdb $slnFile
 }
 
 LintUI()
@@ -112,8 +113,6 @@ Build()
     fi
 
     CleanFolder $outputFolder false
-
-    AddJsonNet
 
     echo "Removing Mono.Posix.dll"
     rm $outputFolder/Mono.Posix.dll

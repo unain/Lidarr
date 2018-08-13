@@ -77,11 +77,11 @@
     <Reference Include="ImageResizer, Version=3.4.3.103, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ImageResizer.3.4.3\lib\ImageResizer.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.5.0-rc06\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.5.4\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="OAuth, Version=1.0.0.0, Culture=neutral, PublicKeyToken=75b3c62967edc2a2, processorArchitecture=MSIL">
       <HintPath>..\packages\OAuth.1.0.3\lib\net40\OAuth.dll</HintPath>
@@ -100,6 +100,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
@@ -187,6 +188,8 @@
     <Compile Include="Datastore\Migration\012_add_release_status.cs" />
     <Compile Include="Datastore\Migration\015_remove_fanzub.cs" />
     <Compile Include="Datastore\Migration\016_update_artist_history_indexes.cs" />
+    <Compile Include="Datastore\Migration\017_remove_nma.cs" />
+    <Compile Include="Datastore\Migration\018_album_disambiguation.cs" />
     <Compile Include="Datastore\Migration\Framework\MigrationContext.cs" />
     <Compile Include="Datastore\Migration\Framework\MigrationController.cs" />
     <Compile Include="Datastore\Migration\Framework\MigrationDbFactory.cs" />
@@ -547,6 +550,7 @@
     <Compile Include="ImportLists\ImportListBase.cs" />
     <Compile Include="ImportLists\ImportListPageableRequestChain.cs" />
     <Compile Include="ImportLists\ImportListPageableRequest.cs" />
+    <Compile Include="ImportLists\ImportListUpdatedHandler.cs" />
     <Compile Include="ImportLists\IProcessImportListResponse.cs" />
     <Compile Include="ImportLists\ImportListSyncService.cs" />
     <Compile Include="ImportLists\ImportListSyncCompleteEvent.cs" />
@@ -578,6 +582,8 @@
     <Compile Include="Indexers\IndexerDefaults.cs" />
     <Compile Include="Indexers\ITorrentIndexerSettings.cs" />
     <Compile Include="Indexers\RssEnclosure.cs" />
+    <Compile Include="Indexers\SeedConfigProvider.cs" />
+    <Compile Include="Indexers\SeedCriteriaSettings.cs" />
     <Compile Include="Indexers\Waffles\WafflesRssParser.cs" />
     <Compile Include="Indexers\Waffles\Waffles.cs" />
     <Compile Include="Indexers\Waffles\WafflesRequestGenerator.cs" />
@@ -811,6 +817,7 @@
     <Compile Include="Music\AlbumAddedService.cs" />
     <Compile Include="Music\AlbumEditedService.cs" />
     <Compile Include="Music\AlbumRelease.cs" />
+    <Compile Include="Music\ArtistPathBuilder.cs" />
     <Compile Include="Music\ArtistStatusType.cs" />
     <Compile Include="Music\AlbumCutoffService.cs" />
     <Compile Include="Music\Commands\BulkMoveArtistCommand.cs" />
@@ -894,6 +901,12 @@
     <Compile Include="Notifications\Slack\SlackExeption.cs" />
     <Compile Include="Notifications\Slack\SlackProxy.cs" />
     <Compile Include="Notifications\Slack\SlackSettings.cs" />
+    <Compile Include="Notifications\Subsonic\SubsonicException.cs" />
+    <Compile Include="Notifications\Subsonic\SubsonicAuthenticationException.cs" />
+    <Compile Include="Notifications\Subsonic\SubsonicServerProxy.cs" />
+    <Compile Include="Notifications\Subsonic\Subsonic.cs" />
+    <Compile Include="Notifications\Subsonic\SubsonicService.cs" />
+    <Compile Include="Notifications\Subsonic\SubsonicSettings.cs" />
     <Compile Include="Notifications\Synology\SynologyException.cs" />
     <Compile Include="Notifications\Synology\SynologyIndexer.cs" />
     <Compile Include="Notifications\Synology\SynologyIndexerProxy.cs" />
@@ -985,10 +998,6 @@
     <Compile Include="Notifications\NotificationFactory.cs" />
     <Compile Include="Notifications\NotificationRepository.cs" />
     <Compile Include="Notifications\NotificationService.cs" />
-    <Compile Include="Notifications\NotifyMyAndroid\NotifyMyAndroid.cs" />
-    <Compile Include="Notifications\NotifyMyAndroid\NotifyMyAndroidPriority.cs" />
-    <Compile Include="Notifications\NotifyMyAndroid\NotifyMyAndroidProxy.cs" />
-    <Compile Include="Notifications\NotifyMyAndroid\NotifyMyAndroidSettings.cs" />
     <Compile Include="Notifications\Plex\PlexClient.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -1111,6 +1120,7 @@
     <Compile Include="ThingiProvider\ConfigContractNotFoundException.cs" />
     <Compile Include="ThingiProvider\Events\ProviderDeletedEvent.cs" />
     <Compile Include="ThingiProvider\Events\ProviderStatusChangedEvent.cs" />
+    <Compile Include="ThingiProvider\Events\ProviderAddedEvent.cs" />
     <Compile Include="ThingiProvider\Events\ProviderUpdatedEvent.cs" />
     <Compile Include="ThingiProvider\IProvider.cs" />
     <Compile Include="ThingiProvider\IProviderConfig.cs" />

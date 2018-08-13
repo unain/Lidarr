@@ -40,10 +40,10 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
                 _proxy.SetTorrentLabel(hash.ToLower(), Settings.MusicCategory, Settings);
             }
 
-            var isRecentEpisode = remoteAlbum.IsRecentAlbum();
+            var isRecentAlbum = remoteAlbum.IsRecentAlbum();
 
-            if (isRecentEpisode && Settings.RecentTvPriority == (int)QBittorrentPriority.First ||
-                !isRecentEpisode && Settings.OlderTvPriority == (int)QBittorrentPriority.First)
+            if (isRecentAlbum && Settings.RecentTvPriority == (int)QBittorrentPriority.First ||
+                !isRecentAlbum && Settings.OlderTvPriority == (int)QBittorrentPriority.First)
             {
                 _proxy.MoveTorrentToTopInQueue(hash.ToLower(), Settings);
             }
@@ -84,7 +84,7 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
                 _logger.Warn(ex, "Failed to set the torrent priority for {0}.", filename);
             }
 
-            SetInitialState(hash);
+            SetInitialState(hash.ToLower());
 
             return hash;
         }
@@ -107,7 +107,8 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
                 item.TotalSize = torrent.Size;
                 item.DownloadClient = Definition.Name;
                 item.RemainingSize = (long)(torrent.Size * (1.0 - torrent.Progress));
-                item.RemainingTime = TimeSpan.FromSeconds(torrent.Eta);
+                item.RemainingTime = GetRemainingTime(torrent);
+                item.SeedRatio = torrent.Ratio;
 
                 item.OutputPath = _remotePathMappingService.RemapRemoteToLocal(Settings.Host, new OsPath(torrent.SavePath));
 
@@ -141,6 +142,7 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
                     case "stalledUP": // torrent is being seeded, but no connection were made
                     case "queuedUP": // queuing is enabled and torrent is queued for upload
                     case "checkingUP": // torrent has finished downloading and is being checked
+                    case "forcedUP": // torrent has finished downloading and is being forcibly seeded
                         item.Status = DownloadItemStatus.Completed;
                         item.RemainingTime = TimeSpan.Zero; // qBittorrent sends eta=8640000 for completed torrents
                         break;
@@ -215,7 +217,7 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
                 else if (Settings.MusicCategory.IsNullOrWhiteSpace())
                 {
                     // warn if labels are supported, but category is not provided
-                    return new NzbDroneValidationFailure("TvCategory", "Category is recommended")
+                    return new NzbDroneValidationFailure("MusicCategory", "Category is recommended")
                     {
                         IsWarning = true,
                         DetailedDescription = "Lidarr will not attempt to import completed downloads without a category."
@@ -315,7 +317,7 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
         {
             try
             {
-                switch ((QBittorrentState) Settings.InitialState)
+                switch ((QBittorrentState)Settings.InitialState)
                 {
                     case QBittorrentState.ForceStart:
                         _proxy.SetForceStart(hash, true, Settings);
@@ -332,6 +334,16 @@ namespace NzbDrone.Core.Download.Clients.QBittorrent
             {
                 _logger.Warn(ex, "Failed to set inital state for {0}.", hash);
             }
+        }
+
+        protected TimeSpan? GetRemainingTime(QBittorrentTorrent torrent)
+        {
+            if (torrent.Eta < 0 || torrent.Eta > 365 * 24 * 3600)
+            {
+                return null;
+            }
+
+            return TimeSpan.FromSeconds((int)torrent.Eta);
         }
     }
 }

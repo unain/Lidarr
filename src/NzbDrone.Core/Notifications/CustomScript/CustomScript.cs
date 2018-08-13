@@ -44,7 +44,7 @@ namespace NzbDrone.Core.Notifications.CustomScript
             environmentVariables.Add("Lidarr_Release_AlbumReleaseDates", string.Join(",", remoteAlbum.Albums.Select(e => e.ReleaseDate)));
             environmentVariables.Add("Lidarr_Release_AlbumTitles", string.Join("|", remoteAlbum.Albums.Select(e => e.Title)));
             environmentVariables.Add("Lidarr_Release_Title", remoteAlbum.Release.Title);
-            environmentVariables.Add("Lidarr_Release_Indexer", remoteAlbum.Release.Indexer);
+            environmentVariables.Add("Lidarr_Release_Indexer", remoteAlbum.Release.Indexer ?? string.Empty);
             environmentVariables.Add("Lidarr_Release_Size", remoteAlbum.Release.Size.ToString());
             environmentVariables.Add("Lidarr_Release_Quality", remoteAlbum.ParsedAlbumInfo.Quality.Quality.Name);
             environmentVariables.Add("Lidarr_Release_QualityVersion", remoteAlbum.ParsedAlbumInfo.Quality.Revision.Version.ToString());
@@ -116,6 +116,18 @@ namespace NzbDrone.Core.Notifications.CustomScript
             environmentVariables.Add("Lidarr_Album_ReleaseDate", album.ReleaseDate.ToString());
             environmentVariables.Add("Lidarr_Download_Client", message.DownloadClient ?? string.Empty);
             environmentVariables.Add("Lidarr_Download_Id", message.DownloadId ?? string.Empty);
+
+            if (message.TrackFiles.Any())
+            {
+                environmentVariables.Add("Lidarr_AddedTrackRelativePaths", string.Join("|", message.TrackFiles.Select(e => e.RelativePath)));
+                environmentVariables.Add("Lidarr_AddedTrackPaths", string.Join("|", message.TrackFiles.Select(e => Path.Combine(artist.Path, e.RelativePath))));
+            }
+
+            if (message.OldFiles.Any())
+            {
+                environmentVariables.Add("Lidarr_DeletedRelativePaths", string.Join("|", message.OldFiles.Select(e => e.RelativePath)));
+                environmentVariables.Add("Lidarr_DeletedPaths", string.Join("|", message.OldFiles.Select(e => Path.Combine(artist.Path, e.RelativePath))));
+            }
 
             ExecuteScript(environmentVariables);
         }

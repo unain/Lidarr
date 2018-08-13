@@ -138,7 +138,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             {
                 var lowerTitle = title.ToLowerInvariant();
 
-                if (lowerTitle.StartsWith("lidarr:") || lowerTitle.StartsWith("lidarrid:"))
+                if (lowerTitle.StartsWith("lidarr:") || lowerTitle.StartsWith("lidarrid:") || lowerTitle.StartsWith("mbid:"))
                 {
                     var slug = lowerTitle.Split(':')[1].Trim();
 
@@ -195,7 +195,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             {
                 var lowerTitle = title.ToLowerInvariant();
 
-                if (lowerTitle.StartsWith("lidarr:") || lowerTitle.StartsWith("lidarrid:"))
+                if (lowerTitle.StartsWith("lidarr:") || lowerTitle.StartsWith("lidarrid:") || lowerTitle.StartsWith("mbid:"))
                 {
                     var slug = lowerTitle.Split(':')[1].Trim();
 
@@ -262,6 +262,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
         {
             Album album = new Album();
             album.Title = resource.Title;
+            album.Disambiguation = resource.Disambiguation;
             album.ForeignAlbumId = resource.Id;
             album.ReleaseDate = resource.ReleaseDate;
             album.CleanTitle = Parser.Parser.CleanArtistName(album.Title);
@@ -313,6 +314,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             AlbumRelease albumRelease = new AlbumRelease
             {
                 Id = resource.Id,
+                Title = resource.Title,
                 ReleaseDate = resource.ReleaseDate,
                 TrackCount = resource.TrackCount,
                 Format = resource.Format,

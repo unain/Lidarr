@@ -9,6 +9,7 @@ import TableRowCell from 'Components/Table/Cells/TableRowCell';
 import formatTimeSpan from 'Utilities/Date/formatTimeSpan';
 import AlbumSearchCellConnector from 'Album/AlbumSearchCellConnector';
 import AlbumTitleLink from 'Album/AlbumTitleLink';
+import StarRating from 'Components/StarRating';
 import styles from './AlbumRow.css';
 
 function getTrackCountKind(monitored, trackFileCount, trackCount) {
@@ -74,6 +75,8 @@ class AlbumRow extends Component {
       mediumCount,
       secondaryTypes,
       title,
+      ratings,
+      disambiguation,
       isSaving,
       artistMonitored,
       foreignAlbumId,
@@ -122,8 +125,9 @@ class AlbumRow extends Component {
                   className={styles.title}
                 >
                   <AlbumTitleLink
-                    title={title}
                     foreignAlbumId={foreignAlbumId}
+                    title={title}
+                    disambiguation={disambiguation}
                   />
                 </TableRowCell>
               );
@@ -164,6 +168,19 @@ class AlbumRow extends Component {
                 <TableRowCell key={name}>
                   {
                     formatTimeSpan(duration)
+                  }
+                </TableRowCell>
+              );
+            }
+
+            if (name === 'rating') {
+              return (
+                <TableRowCell key={name}>
+                  {
+                    <StarRating
+                      rating={ratings.value}
+                      votes={ratings.votes}
+                    />
                   }
                 </TableRowCell>
               );
@@ -223,6 +240,8 @@ AlbumRow.propTypes = {
   mediumCount: PropTypes.number.isRequired,
   duration: PropTypes.number.isRequired,
   title: PropTypes.string.isRequired,
+  ratings: PropTypes.object.isRequired,
+  disambiguation: PropTypes.string,
   secondaryTypes: PropTypes.arrayOf(PropTypes.string).isRequired,
   foreignAlbumId: PropTypes.string.isRequired,
   isSaving: PropTypes.bool,
